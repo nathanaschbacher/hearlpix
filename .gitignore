@@ -1,2 +1,5 @@
 *.beam
 *.app
+*.o
+*.log
+priv
