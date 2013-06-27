@@ -2,7 +2,6 @@
 
 Erlang HEALPix library wrapping the HEALPix C++ implementation (sans FITSIO).
 
-__NOTE:__ This is currently not working properly.  The shared resource for the `T_Healpix_Base<I>` instance isn't being properly maintained across the barrier between Erlang and C
 
 ## Installation
 
@@ -23,10 +22,8 @@ This should automatically build the `cfitsio` and `healpix_cxx` dependencies and
     {ok,<<>>}
     2> hearlpix:get_scheme(H).
     nest
-    
-Except the above isn't what happens.  Instead the result of #2 will be `{error,"Scheme not set."}`.  Need to get this sorted out.
-
-I know it's related to how I'm handling the `enif_alloc_resource` `enif_make_resource` and `enif_get_resource`, but I can't isolate what exactly.
+    3> hearlpix:pix2ang(H, 23).
+    {1.5693314825210272,0.7865486489883625}
 
 
 ## License

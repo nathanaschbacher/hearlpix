@@ -9,7 +9,7 @@ static ErlNifResourceType* HEALPIX_BASE_RESOURCE;
 
 typedef struct 
 {
-    T_Healpix_Base<I>* base;
+	T_Healpix_Base<I>* base;
 } healpix_handle;
 
 namespace hearlpix {
@@ -42,12 +42,9 @@ namespace hearlpix {
 			}
 
 			healpix_handle* handle = (healpix_handle*)enif_alloc_resource(HEALPIX_BASE_RESOURCE, sizeof(healpix_handle)); 
-
-	        T_Healpix_Base<I> hp_base(order, scheme);
-	        handle->base = &hp_base;
+	        handle->base = new T_Healpix_Base<I>(order, scheme);
 	        
 	        ERL_NIF_TERM result = enif_make_resource(env, handle);
-	        enif_release_resource(handle);
 	        
 	        return enif_make_tuple2(env, hearlpix::ATOM_OK, result);
 		}
@@ -649,9 +646,11 @@ namespace hearlpix {
 	    {"npix2nside", 1, hearlpix::npix2nside}
 	};
 
-	void base_resource_dtor(ErlNifEnv* env, void* arg)
+	void healpix_handle_dtor(ErlNifEnv* env, void* arg)
 	{
-		return;
+		healpix_handle* handle = (healpix_handle*)arg;
+		handle->base->~T_Healpix_Base<I>();
+		enif_release_resource(handle);
 	}
 
 	static int on_nif_load(ErlNifEnv* env, void** priv_data, ERL_NIF_TERM load_info) 
@@ -670,7 +669,7 @@ namespace hearlpix {
 															env,
 															"hearlpix", 
 															"healpix_base_resource", 
-															&hearlpix::base_resource_dtor, 
+															&hearlpix::healpix_handle_dtor, 
 															flags,
 	                                                    	NULL
                                                     	);
