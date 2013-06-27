@@ -1,0 +1,18 @@
+.SILENT:
+
+EXTERNAL_CFITSIO=yes
+
+CC=gcc -std=gnu99
+CL=gcc -std=gnu99
+CCFLAGS_NO_C=-O3 -ffast-math -fomit-frame-pointer -fno-tree-vectorize -fopenmp -I/Users/nathan/Documents/Repositories/hearlpix/priv/cfitsio//include 
+CCFLAGS=$(CCFLAGS_NO_C) -c
+CLFLAGS=-L. -L$(LIBDIR) -L/Users/nathan/Documents/Repositories/hearlpix/priv/cfitsio//lib -arch x86_64 -O3 -ffast-math -fomit-frame-pointer -fno-tree-vectorize -fopenmp -lm
+
+CXX=g++
+CXXL=g++
+CXXCFLAGS_NO_C=-O2 -ffast-math -fomit-frame-pointer -fopenmp -I/Users/nathan/Documents/Repositories/hearlpix/priv/cfitsio//include 
+CXXCFLAGS=$(CXXCFLAGS_NO_C) -c
+CXXLFLAGS=-L. -L$(LIBDIR) -L/Users/nathan/Documents/Repositories/hearlpix/priv/cfitsio//lib -arch x86_64 -O2 -ffast-math -fomit-frame-pointer -fopenmp
+
+ARCREATE=libtool -static -o
+CXX_EXTRALIBS+=-lcfitsio 

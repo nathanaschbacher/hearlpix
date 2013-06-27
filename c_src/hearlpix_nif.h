@@ -1,0 +1,6 @@
+#ifndef INCLUDE_HEARLPIX_NIF_H
+#define INCLUDE_HEARLPIX_NIF_H
+
+#define MAX_ATOM_LENGTH 32
+
+#endif

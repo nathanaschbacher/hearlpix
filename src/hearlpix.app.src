@@ -1,0 +1,13 @@
+{application, hearlpix, [
+  {description, "Erlang HEALPix library wrapping the HEALPix C++ implementation (sans FITSIO)"},
+  {vsn, "0.1"},
+  {modules, [
+    hearlpix
+  ]},
+  {registered, []},
+  {applications, [
+    kernel,
+    stdlib
+  ]},
+  {env, []}
+]}.
