@@ -28,7 +28,7 @@ INSTALL_DIRS	= ${prefix} ${CFITSIO_INCLUDE} ${CFITSIO_LIB} ${CFITSIO_LIB}/pkgcon
 
 SHELL =		/bin/sh
 RANLIB =	ranlib
-CC =		gcc
+CC =		cc
 CFLAGS =	-arch x86_64 -Wall -O3 -fPIC -arch i386 -arch x86_64 -Dg77Fortran -fPIC -fno-common
 SSE_FLAGS =	
 FC =		notfound
@@ -38,7 +38,7 @@ LIBS =
 FLEX =		flex
 BISON =		bison
 
-SHLIB_LD =	gcc -dynamiclib -arch i386 -arch x86_64
+SHLIB_LD =	cc -dynamiclib -arch i386 -arch x86_64
 SHLIB_SUFFIX =	.dylib
 
 

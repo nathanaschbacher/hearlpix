@@ -9,7 +9,7 @@ Erlang HEALPix library wrapping the HEALPix C++ implementation (sans FITSIO).
 
 	$ git clone git@github.com:nathanaschbacher/hearlpix.git .
 	$ cd hearlpix
-	$ make
+	$ ./rebar compile
 	
 This should automatically build the `cfitsio` and `healpix_cxx` dependencies and move the headers, libraries, and binaries to the `priv/` directory.
 
