@@ -63,15 +63,22 @@ namespace hearlpix {
     {
         latlng ll;
 
+        // For HEALPix purposes the meaning of theta and phi match the physics usage where theta = 0 is the north pole.
+        // This will be confusing for people accustom to phi being the latitude.  
+        // Sue me, NASA must have more phyisists than mathematicians.
         ll.lat = hearlpix::rad2deg(ptg.theta) - 90.0; // Subtract 90 to turn the colatitude into geo-latitude;
-        ll.lng = hearlpix::rad2deg(ptg.phi);
+        ll.lng = hearlpix::rad2deg(ptg.phi) - 180.0; // Subtract 180 to normalize values between -180 and 180;
 
         return ll;
     };
 
     static pointing latlng2ang (latlng ll)
     {
-        return pointing(hearlpix::deg2rad(ll.lat + 90.0), hearlpix::deg2rad(ll.lng)); // Add 90 to convert to colatitude.
+        // For HEALPix purposes the meaning of theta and phi match the physics usage where theta = 0 is the north pole.
+        // This will be confusing for people accustom to phi being the latitude.  
+        // Sue me, NASA must have more phyisists than mathematicians.
+        return pointing(hearlpix::deg2rad(ll.lat + 90.0), // Add 90 to convert to colatitude.
+                        hearlpix::deg2rad(ll.lng + 180.0)); // Add 180 to normalize values between 0 and 360;
     };
 
 
