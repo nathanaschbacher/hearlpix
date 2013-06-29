@@ -25,13 +25,14 @@
 -author('Nathan Aschbacher <nathan@basho.com>').
 -export([new/2]).
 -export([ring2z/2, pix2ring/2, nest2ring/2, ring2nest/2, nest2peano/2, peano2nest/2]).
--export([zphi2pix/3, ang2pix/3, vec2pix/4, pix2zphi/2, pix2ang/2, pix2vec/2]).
+-export([zphi2pix/3, latlng2pix/3, ang2pix/3, vec2pix/4, pix2zphi/2, pix2latlng/2, pix2ang/2, pix2vec/2]).
 -export([query_disc/4, query_disc/5, query_disc_inclusive/5, query_disc_inclusive/6]).
 -export([query_polygon/2, query_polygon_inclusive/3]).
 -export([query_strip/3, query_strip_inclusive/3]).
 -export([get_ring_info/2, get_ring_info2/2, get_ring_small/2]).
 -export([neighbors/2, get_interpol/3, get_interpol/4]).
--export([get_order/1, get_nside/1, get_npix/1, get_scheme/1, conformable/2, max_pixrad/1, max_pixrad/2, boundaries/3]).
+-export([get_order/1, get_nside/1, get_npix/1, get_scheme/1, conformable/2, max_pixrad/1, max_pixrad/2]).
+-export([boundaries_as_vec/3, boundaries_as_ang/3, boundaries_as_latlng/3]).
 -export([nside2order/1, npix2nside/1]).
 
 -on_load(init/0).
@@ -94,6 +95,10 @@ peano2nest(Base, Pix) ->
 zphi2pix(Base, Z, Phi) ->
     erlang:nif_error({error, not_loaded}).
 
+-spec latlng2pix(Base::hearlpix_base(), Latitude::float(), Longitude::float()) -> integer() | error().
+latlng2pix(Base, Latitude, Longitude) ->
+    erlang:nif_error({error, not_loaded}).
+
 -spec ang2pix(Base::hearlpix_base(), Theta::float(), Phi::float()) -> integer() | error().
 ang2pix(Base, Theta, Phi) ->
     erlang:nif_error({error, not_loaded}).
@@ -105,6 +110,10 @@ vec2pix(Base, X, Y, Z) ->
 
 -spec pix2zphi(Base::hearlpix_base(), Pix::integer()) -> {Z::float(), Phi::float()} | error().
 pix2zphi(Base, Pix) ->
+    erlang:nif_error({error, not_loaded}).
+
+-spec pix2latlng(Base::hearlpix_base(), Pix::integer()) -> {Latitude::float(), Longitude::float()} | error().
+pix2latlng(Base, Pix) ->
     erlang:nif_error({error, not_loaded}).
 
 -spec pix2ang(Base::hearlpix_base(), Pix::integer()) -> {Theta::float(), Phi::float()} | error().
@@ -210,10 +219,17 @@ max_pixrad(Base) ->
 max_pixrad(Base, Ring) ->
     erlang:nif_error({error, not_loaded}).
 
--spec boundaries(Base::hearlpix_base(), Pix::integer(), Step::integer()) -> [integer()] | error().
-boundaries(Base, Pix, Step) ->
+-spec boundaries_as_vec(Base::hearlpix_base(), Pix::integer(), Step::integer()) -> [integer()] | error().
+boundaries_as_vec(Base, Pix, Step) ->
     erlang:nif_error({error, not_loaded}).
 
+-spec boundaries_as_ang(Base::hearlpix_base(), Pix::integer(), Step::integer()) -> [integer()] | error().
+boundaries_as_ang(Base, Pix, Step) ->
+    erlang:nif_error({error, not_loaded}).
+
+-spec boundaries_as_latlng(Base::hearlpix_base(), Pix::integer(), Step::integer()) -> [integer()] | error().
+boundaries_as_latlng(Base, Pix, Step) ->
+    erlang:nif_error({error, not_loaded}).
 
 -spec nside2order(Nside::integer()) -> integer() | error().
 nside2order(Nside) ->

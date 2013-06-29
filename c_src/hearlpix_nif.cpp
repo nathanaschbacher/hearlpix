@@ -22,6 +22,7 @@
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <vector>
+#include <math.h>
 #include "erl_nif.h"
 #include "hearlpix_nif.h"
 #include "healpix_base.h"
@@ -35,12 +36,44 @@ typedef struct
     T_Healpix_Base<I>* base;
 } healpix_handle;
 
+typedef struct 
+{
+    double lat;
+    double lng;
+} latlng;
+
 namespace hearlpix {
     ERL_NIF_TERM ATOM_OK;
     ERL_NIF_TERM ATOM_ERROR;
     ERL_NIF_TERM ATOM_BADARG;
     ERL_NIF_TERM ATOM_TRUE;
     ERL_NIF_TERM ATOM_FALSE;
+
+    static double deg2rad (double deg)
+    {
+        return (deg * M_PI) / 180.0;
+    };
+
+    static double rad2deg (double rad)
+    {
+        return (rad * 180.0) / M_PI;
+    };
+
+    static latlng ang2latlng (pointing ptg)
+    {
+        latlng ll;
+
+        ll.lat = hearlpix::rad2deg(ptg.theta) - 90.0; // Subtract 90 to turn the colatitude into geo-latitude;
+        ll.lng = hearlpix::rad2deg(ptg.phi);
+
+        return ll;
+    };
+
+    static pointing latlng2ang (latlng ll)
+    {
+        return pointing(hearlpix::deg2rad(ll.lat + 90.0), hearlpix::deg2rad(ll.lng)); // Add 90 to convert to colatitude.
+    };
+
 
     static ERL_NIF_TERM new_base (ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) 
     {
@@ -187,6 +220,26 @@ namespace hearlpix {
         }
     };
 
+    static ERL_NIF_TERM latlng2pix (ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) 
+    {
+        healpix_handle* hpx;
+        double theta;
+        double phi;
+
+        if(enif_get_resource(env, argv[0], HEALPIX_BASE_RESOURCE, (void**)&hpx) 
+        && enif_get_double(env, argv[1], &theta)
+        && enif_get_double(env, argv[2], &phi)) 
+        {
+            pointing ptg = pointing(theta, phi);
+
+            return enif_make_int64(env, hpx->base->ang2pix(ptg));
+        }
+        else 
+        {
+            return enif_make_badarg(env);
+        }
+    };
+
     static ERL_NIF_TERM ang2pix (ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) 
     {
         healpix_handle* hpx;
@@ -242,6 +295,25 @@ namespace hearlpix {
             hpx->base->pix2zphi(pix, z, phi);
 
             return enif_make_tuple2(env, enif_make_double(env, z), enif_make_double(env, phi));
+        }
+        else 
+        {
+            return enif_make_badarg(env);
+        }
+    };
+
+    static ERL_NIF_TERM pix2latlng (ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) 
+    {
+        healpix_handle* hpx;
+        I pix;
+        
+        if(enif_get_resource(env, argv[0], HEALPIX_BASE_RESOURCE, (void**)&hpx) && enif_get_int64(env, argv[1], &pix)) 
+        {
+            pointing ptg;
+            
+            ptg = hpx->base->pix2ang(pix);
+
+            return enif_make_tuple2(env, enif_make_double(env, ptg.theta), enif_make_double(env, ptg.phi));
         }
         else 
         {
@@ -549,7 +621,24 @@ namespace hearlpix {
 
     static ERL_NIF_TERM conformable (ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) 
     {
-        return enif_make_tuple1(env, hearlpix::ATOM_ERROR);
+        healpix_handle* hpx1;
+        healpix_handle* hpx2;
+
+        if(enif_get_resource(env, argv[0], HEALPIX_BASE_RESOURCE, (void**)&hpx1) && enif_get_resource(env, argv[1], HEALPIX_BASE_RESOURCE, (void**)&hpx2))
+        {
+            if(hpx1->base->conformable(*(hpx2->base)))
+            {
+                return hearlpix::ATOM_TRUE;
+            }
+            else
+            {
+                return hearlpix::ATOM_FALSE;
+            }
+        }
+        else
+        {
+            return enif_make_badarg(env);
+        }
     };
 
     static ERL_NIF_TERM max_pixrad (ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) 
@@ -584,9 +673,107 @@ namespace hearlpix {
         }
     };
 
-    static ERL_NIF_TERM boundaries (ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+    static ERL_NIF_TERM boundaries_as_vec (ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
     {
-        return enif_make_tuple1(env, hearlpix::ATOM_ERROR);
+        healpix_handle* hpx;
+        I pix;
+        int step;
+
+        if(enif_get_resource(env, argv[0], HEALPIX_BASE_RESOURCE, (void**)&hpx) 
+        && enif_get_int64(env, argv[1], &pix)
+        && enif_get_int(env, argv[2], &step)) 
+        {
+            std::vector<vec3> results;
+            std::vector<ERL_NIF_TERM> terms;
+
+            hpx->base->boundaries(pix, step, results);
+
+            terms.reserve(results.size());
+
+            for(unsigned i=0; i < results.size(); i++) {
+                terms.push_back(enif_make_tuple3(env, 
+                    enif_make_double(env, results[i].x), 
+                    enif_make_double(env, results[i].y),
+                    enif_make_double(env, results[i].z)
+                ));
+            }
+
+            return enif_make_list_from_array(env, &terms[0], terms.size());
+        }
+        else 
+        {
+            return enif_make_badarg(env);
+        }
+    };
+
+    static ERL_NIF_TERM boundaries_as_ang (ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+    {
+        healpix_handle* hpx;
+        I pix;
+        int step;
+
+        if(enif_get_resource(env, argv[0], HEALPIX_BASE_RESOURCE, (void**)&hpx) 
+        && enif_get_int64(env, argv[1], &pix)
+        && enif_get_int(env, argv[2], &step)) 
+        {
+            std::vector<vec3> results;
+            std::vector<ERL_NIF_TERM> terms;
+            pointing ptg;
+
+            hpx->base->boundaries(pix, step, results);
+
+            terms.reserve(results.size());
+
+            for(unsigned i=0; i < results.size(); i++) {
+                ptg.from_vec3(results[i]);
+                terms.push_back(enif_make_tuple2(env, 
+                    enif_make_double(env, ptg.theta), 
+                    enif_make_double(env, ptg.phi)
+                ));
+            }
+
+            return enif_make_list_from_array(env, &terms[0], terms.size());
+        }
+        else 
+        {
+            return enif_make_badarg(env);
+        }
+    };
+
+    static ERL_NIF_TERM boundaries_as_latlng (ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
+    {
+        healpix_handle* hpx;
+        I pix;
+        int step;
+
+        if(enif_get_resource(env, argv[0], HEALPIX_BASE_RESOURCE, (void**)&hpx) 
+        && enif_get_int64(env, argv[1], &pix)
+        && enif_get_int(env, argv[2], &step)) 
+        {
+            std::vector<vec3> results;
+            std::vector<ERL_NIF_TERM> terms;
+            pointing ptg;
+            latlng ll;
+
+            hpx->base->boundaries(pix, step, results);
+
+            terms.reserve(results.size());
+
+            for(unsigned i=0; i < results.size(); i++) {
+                ptg.from_vec3(results[i]);
+                ll = hearlpix::ang2latlng(ptg);
+                terms.push_back(enif_make_tuple2(env, 
+                    enif_make_double(env, ll.lat), 
+                    enif_make_double(env, ll.lng)
+                ));
+            }
+
+            return enif_make_list_from_array(env, &terms[0], terms.size());
+        }
+        else 
+        {
+            return enif_make_badarg(env);
+        }
     };
 
     static ERL_NIF_TERM nside2order (ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) 
@@ -631,10 +818,12 @@ namespace hearlpix {
         {"peano2nest", 2, hearlpix::peano2nest},
         
         {"zphi2pix", 3, hearlpix::zphi2pix},
+        {"latlng2pix", 3, hearlpix::latlng2pix},
         {"ang2pix", 3, hearlpix::ang2pix},
         {"vec2pix", 4, hearlpix::vec2pix},
         
         {"pix2zphi", 2, hearlpix::pix2zphi},
+        {"pix2latlng", 2, hearlpix::pix2latlng},
         {"pix2ang", 2, hearlpix::pix2ang},
         {"pix2vec", 2, hearlpix::pix2vec},
         
@@ -664,7 +853,9 @@ namespace hearlpix {
         
         {"max_pixrad", 1, hearlpix::max_pixrad},
         {"max_pixrad", 2, hearlpix::max_pixrad},
-        {"boundaries", 3, hearlpix::boundaries},
+        {"boundaries_as_vec", 3, hearlpix::boundaries_as_vec},
+        {"boundaries_as_ang", 3, hearlpix::boundaries_as_ang},
+        {"boundaries_as_latlng", 3, hearlpix::boundaries_as_latlng},
 
         {"nside2order", 1, hearlpix::nside2order},
         {"npix2nside", 1, hearlpix::npix2nside}
