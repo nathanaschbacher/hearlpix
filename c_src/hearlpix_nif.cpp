@@ -59,6 +59,11 @@ namespace hearlpix {
         return (rad * 180.0) / M_PI;
     };
 
+    static double dist2arc (double radius, double dist)
+    {
+        return dist / radius;
+    };
+
     static latlng ang2latlng (pointing ptg)
     {
         latlng ll;
@@ -80,7 +85,6 @@ namespace hearlpix {
         return pointing(hearlpix::deg2rad(ll.lat + 90.0), // Add 90 to convert to colatitude.
                         hearlpix::deg2rad(ll.lng + 180.0)); // Add 180 to normalize values between 0 and 360;
     };
-
 
     static ERL_NIF_TERM new_base (ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) 
     {

@@ -2,7 +2,8 @@
   {description, "Erlang HEALPix library wrapping the HEALPix C++ implementation (sans FITSIO)"},
   {vsn, "0.1"},
   {modules, [
-    hearlpix
+    hearlpix,
+    hearlpix_nif
   ]},
   {registered, []},
   {applications, [
